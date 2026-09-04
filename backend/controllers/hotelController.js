@@ -6,7 +6,7 @@ const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) =>
 exports.listHotels = async (req, res) => {
   try {
     const { destination, minPrice, maxPrice, search, sort } = req.query;
-    const filter = {};
+    const filter = { verificationStatus: "verified" };
     if (destination) filter.destination = new RegExp(destination, "i");
     if (minPrice || maxPrice) {
       filter.pricePerNight = {};
@@ -29,7 +29,7 @@ exports.listHotels = async (req, res) => {
 
 exports.getHotel = async (req, res) => {
   try {
-    const hotel = await Hotel.findById(req.params.id);
+    const hotel = await Hotel.findOne({ _id: req.params.id, verificationStatus: "verified" });
     if (!hotel) return res.status(404).json({ message: "Hotel not found" });
     res.json(hotel);
   } catch (err) {

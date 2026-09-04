@@ -36,6 +36,7 @@ async function seed() {
       amenities: ["WiFi", "Mountain View", "Breakfast"],
       tags: ["adventure", "nature"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       name: "Goa Beach Resort",
@@ -48,6 +49,7 @@ async function seed() {
       amenities: ["Pool", "Beach Access", "Bar"],
       tags: ["beach", "nightlife"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       name: "Lake Palace View",
@@ -60,6 +62,7 @@ async function seed() {
       amenities: ["Lake View", "Heritage", "Spa"],
       tags: ["cultural", "heritage"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       name: "Tea Garden Retreat",
@@ -72,6 +75,7 @@ async function seed() {
       amenities: ["Tea Estate Tour", "Mountain View"],
       tags: ["nature", "cultural"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       name: "Coral Bay Villas",
@@ -84,6 +88,7 @@ async function seed() {
       amenities: ["Scuba Diving", "Private Beach"],
       tags: ["beach", "adventure"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       name: "Nawabi Heritage Stay",
@@ -97,6 +102,7 @@ async function seed() {
       amenities: ["WiFi", "Breakfast", "Airport Transfer"],
       tags: ["cultural", "food", "heritage"],
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
   ]);
 
@@ -109,6 +115,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.7,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Scuba Diving Andaman",
@@ -118,6 +125,7 @@ async function seed() {
       durationHours: 3,
       rating: 4.9,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Udaipur Heritage Walk",
@@ -127,6 +135,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.6,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Goan Seafood Trail",
@@ -136,6 +145,7 @@ async function seed() {
       durationHours: 3,
       rating: 4.8,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Darjeeling Tea Tasting",
@@ -145,6 +155,7 @@ async function seed() {
       durationHours: 1,
       rating: 4.5,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Himalayan Yoga Retreat",
@@ -154,6 +165,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.6,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
     {
       title: "Lucknow Old City Food Walk",
@@ -163,18 +175,19 @@ async function seed() {
       durationHours: 3,
       rating: 4.8,
       vendor: vendor._id,
+      verificationStatus: "verified",
     },
   ]);
 
   await TravelService.insertMany([
-    { title: "Manali Mountain Taxi", type: "Taxi", destination: "Manali", price: 1800, capacity: 4, durationHours: 8, rating: 4.7, vendor: vendor._id },
-    { title: "Goa Airport Beach Transfer", type: "Airport Transfer", destination: "Goa", price: 1200, capacity: 4, durationHours: 2, rating: 4.8, vendor: vendor._id },
-    { title: "Udaipur Heritage Guide", type: "Local Guide", destination: "Udaipur", price: 1500, capacity: 8, durationHours: 4, rating: 4.9, vendor: vendor._id },
-    { title: "Darjeeling Hill Car Rental", type: "Car Rental", destination: "Darjeeling", price: 2400, capacity: 4, durationHours: 10, rating: 4.6, vendor: vendor._id },
-    { title: "Lucknow Heritage Taxi", type: "Taxi", destination: "Lucknow", price: 1400, capacity: 4, durationHours: 6, rating: 4.7, vendor: vendor._id },
+    { title: "Manali Mountain Taxi", type: "Taxi", destination: "Manali", price: 1800, capacity: 4, durationHours: 8, rating: 4.7, vendor: vendor._id, verificationStatus: "verified" },
+    { title: "Goa Airport Beach Transfer", type: "Airport Transfer", destination: "Goa", price: 1200, capacity: 4, durationHours: 2, rating: 4.8, vendor: vendor._id, verificationStatus: "verified" },
+    { title: "Udaipur Heritage Guide", type: "Local Guide", destination: "Udaipur", price: 1500, capacity: 8, durationHours: 4, rating: 4.9, vendor: vendor._id, verificationStatus: "verified" },
+    { title: "Darjeeling Hill Car Rental", type: "Car Rental", destination: "Darjeeling", price: 2400, capacity: 4, durationHours: 10, rating: 4.6, vendor: vendor._id, verificationStatus: "verified" },
+    { title: "Lucknow Heritage Taxi", type: "Taxi", destination: "Lucknow", price: 1400, capacity: 4, durationHours: 6, rating: 4.7, vendor: vendor._id, verificationStatus: "verified" },
   ]);
 
-  console.log("Seed complete: 2 users, 5 hotels, 6 experiences, 4 travel services created.");
+  console.log("Seed complete: 2 users, 6 hotels, 7 experiences, 5 travel services created.");
   console.log("Login with traveler@travelboost.com / password123");
   process.exit(0);
 }

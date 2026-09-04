@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
 const serviceTypes = ["", "Taxi", "Airport Transfer", "Local Guide", "Bus", "Car Rental"];
 
 export default function TravelServices() {
+  const [params] = useSearchParams();
   const [services, setServices] = useState([]);
-  const [destination, setDestination] = useState("");
+  const [destination, setDestination] = useState(params.get("destination") || "");
   const [type, setType] = useState("");
   const [selected, setSelected] = useState(null);
   const [booking, setBooking] = useState({ date: "", guests: 1, couponCode: "" });

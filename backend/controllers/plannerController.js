@@ -196,20 +196,20 @@ exports.generateItinerary = async (req, res) => {
       experiences,
       travelServices,
     ] = await Promise.all([
-      Hotel.find(placeFilter)
+      Hotel.find({ ...placeFilter, verificationStatus: "verified" })
         .sort({
           rating: -1,
           pricePerNight: 1,
         })
         .limit(5),
 
-      Experience.find(experienceFilter)
+      Experience.find({ ...experienceFilter, verificationStatus: "verified" })
         .sort({
           rating: -1,
         })
         .limit(20),
 
-      TravelService.find(placeFilter)
+      TravelService.find({ ...placeFilter, verificationStatus: "verified" })
         .sort({
           rating: -1,
           price: 1,
@@ -265,15 +265,17 @@ exports.generateItinerary = async (req, res) => {
      */
 
     const perDay = {
-      stay:
-        stay?.pricePerNight ||
-        Math.round((budget * 0.35) / days),
+      stay: Math.min(
+        stay?.pricePerNight || Math.round((budget * 0.35) / days),
+        Math.round((budget * 0.35) / days)
+      ),
 
       food: Math.round((budget * 0.18) / days),
 
-      transport:
-        transport?.price ||
-        Math.round((budget * 0.15) / days),
+      transport: Math.min(
+        transport?.price || Math.round((budget * 0.15) / days),
+        Math.round((budget * 0.15) / days)
+      ),
 
       activity:
         Math.round((budget * 0.25) / days),
@@ -305,9 +307,10 @@ exports.generateItinerary = async (req, res) => {
               ]
             : null;
 
-        const activityCost =
-          experience?.price ||
-          perDay.activity;
+        const activityCost = Math.min(
+          experience?.price || perDay.activity,
+          perDay.activity
+        );
 
         return {
           day: index + 1,
@@ -430,6 +433,8 @@ exports.generateItinerary = async (req, res) => {
       budget,
 
       totalEstimate,
+
+      budgetStatus: totalEstimate <= budget ? "within_budget" : "over_budget",
 
       recommendedHotel: stay,
 

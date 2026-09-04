@@ -15,6 +15,8 @@ export default function Bookings() {
   const [bookings, setBookings] = useState([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [reviewing, setReviewing] = useState(null);
+  const [reviewForm, setReviewForm] = useState({ rating: 5, comment: "" });
 
   useEffect(() => {
     if (!user) return;
@@ -48,6 +50,23 @@ export default function Bookings() {
       setError(
         err.response?.data?.message || "Failed to cancel booking"
       );
+    }
+  }
+
+  async function submitReview(event) {
+    event.preventDefault();
+    try {
+      await api.post("/reviews", {
+        booking: reviewing._id,
+        rating: Number(reviewForm.rating),
+        comment: reviewForm.comment,
+      });
+      setBookings((prev) => prev.map((booking) => (
+        booking._id === reviewing._id ? { ...booking, reviewed: true } : booking
+      )));
+      setReviewing(null);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to submit review");
     }
   }
 
@@ -124,8 +143,40 @@ export default function Bookings() {
               Cancel
             </button>
           )}
+
+          {["completed", "confirmed"].includes(b.status) &&
+            new Date(b.checkOut || b.checkIn) <= new Date() &&
+            !b.reviewed && (
+            <button
+              onClick={() => { setReviewing(b); setReviewForm({ rating: 5, comment: "" }); }}
+              className="text-xs font-medium text-brand-600"
+            >
+              Review
+            </button>
+          )}
         </div>
       ))}
+
+      {reviewing && (
+        <div className="fixed inset-0 z-20 flex items-center justify-center bg-black/30 p-4">
+          <form onSubmit={submitReview} className="w-full max-w-md space-y-4 rounded-2xl bg-white p-6 shadow-xl">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="font-bold text-gray-800">Review your experience</h2>
+                <p className="text-sm text-gray-500">{reviewing.item?.name || reviewing.item?.title || "Your booking"}</p>
+              </div>
+              <button type="button" onClick={() => setReviewing(null)} className="text-gray-400">✕</button>
+            </div>
+            <label className="block text-sm font-medium text-gray-700">Rating
+              <select value={reviewForm.rating} onChange={(event) => setReviewForm({ ...reviewForm, rating: event.target.value })} className="mt-1 w-full rounded-lg border p-2">
+                {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} stars</option>)}
+              </select>
+            </label>
+            <textarea value={reviewForm.comment} onChange={(event) => setReviewForm({ ...reviewForm, comment: event.target.value })} placeholder="What did you think?" className="min-h-24 w-full rounded-lg border p-2 text-sm" />
+            <button type="submit" className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white">Submit verified review</button>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

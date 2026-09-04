@@ -14,6 +14,11 @@ const travelServiceRoutes = require("./routes/travelServices");
 
 const app = express();
 
+if (!process.env.JWT_SECRET) {
+  console.error("JWT_SECRET is missing. Add it to backend/.env before starting the API.");
+  process.exit(1);
+}
+
 const allowedOrigins = [
   "http://localhost:5173",
   "http://localhost:5174",

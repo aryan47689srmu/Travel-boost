@@ -2,6 +2,7 @@ const Booking = require("../models/Booking");
 const Hotel = require("../models/Hotel");
 const Experience = require("../models/Experience");
 const TravelService = require("../models/TravelService");
+const Review = require("../models/Review");
 
 const MODELS = { Hotel, Experience, TravelService };
 
@@ -42,12 +43,18 @@ exports.createBooking = async (req, res) => {
     }
 
     if (itemType === "Hotel") {
-      const reserved = await Hotel.findOneAndUpdate(
-        { _id: item, roomsAvailable: { $gt: 0 } },
-        { $inc: { roomsAvailable: -1 } },
-        { new: true }
-      );
-      if (!reserved) return res.status(409).json({ message: "This hotel is sold out" });
+      const hotel = await Hotel.findById(item).select("roomsTotal roomsAvailable");
+      const roomCapacity = hotel?.roomsTotal || hotel?.roomsAvailable || 0;
+      const overlappingBookings = await Booking.countDocuments({
+        itemType: "Hotel",
+        item,
+        status: { $in: ["pending", "confirmed"] },
+        checkIn: { $lt: end },
+        checkOut: { $gt: start },
+      });
+      if (!hotel || overlappingBookings >= roomCapacity) {
+        return res.status(409).json({ message: "This hotel has no rooms available for those dates" });
+      }
     }
 
     let booking;
@@ -63,7 +70,6 @@ exports.createBooking = async (req, res) => {
       couponCode: normalizedCoupon,
       });
     } catch (error) {
-      if (itemType === "Hotel") await Hotel.findByIdAndUpdate(item, { $inc: { roomsAvailable: 1 } });
       throw error;
     }
 
@@ -78,7 +84,12 @@ exports.myBookings = async (req, res) => {
     const bookings = await Booking.find({ user: req.user.id })
       .populate("item")
       .sort({ createdAt: -1 });
-    res.json(bookings);
+    const reviews = await Review.find({ user: req.user.id }).select("booking");
+    const reviewedBookings = new Set(reviews.map((review) => String(review.booking)));
+    res.json(bookings.map((booking) => ({
+      ...booking.toObject(),
+      reviewed: reviewedBookings.has(String(booking._id)),
+    })));
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch bookings", error: err.message });
   }
@@ -92,9 +103,6 @@ exports.cancelBooking = async (req, res) => {
       { new: true }
     );
     if (!booking) return res.status(404).json({ message: "Booking not found" });
-    if (booking.itemType === "Hotel") {
-      await Hotel.findByIdAndUpdate(booking.item, { $inc: { roomsAvailable: 1 } });
-    }
     res.json(booking);
   } catch (err) {
     res.status(500).json({ message: "Failed to cancel booking", error: err.message });

@@ -5,7 +5,7 @@ const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) =>
 exports.listServices = async (req, res) => {
   try {
     const { destination, type } = req.query;
-    const filter = {};
+    const filter = { verificationStatus: "verified" };
     if (destination) filter.destination = new RegExp(destination, "i");
     if (type) filter.type = type;
     res.json(await TravelService.find(filter).sort({ rating: -1, createdAt: -1 }).limit(100));

@@ -9,6 +9,7 @@ const categories = ["Adventure", "Cultural", "Food & Dining", "Nature", "Wellnes
 
 export default function Experiences() {
   const [params] = useSearchParams();
+  const [destination, setDestination] = useState(params.get("destination") || "");
   const [category, setCategory] = useState(params.get("category") || "");
   const [experiences, setExperiences] = useState([]);
   const [selected, setSelected] = useState(null);
@@ -18,14 +19,14 @@ export default function Experiences() {
   const navigate = useNavigate();
 
   async function load() {
-    const { data } = await api.get("/experiences", { params: { category } });
+    const { data } = await api.get("/experiences", { params: { destination, category } });
     setExperiences(data);
   }
 
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category]);
+  }, [category, destination]);
 
   async function bookExperience() {
     if (!user) return navigate("/login");
@@ -38,6 +39,13 @@ export default function Experiences() {
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold text-gray-800">Experiences</h1>
+
+      <input
+        value={destination}
+        onChange={(event) => setDestination(event.target.value)}
+        placeholder="Destination (e.g. Goa, Manali)"
+        className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm sm:max-w-sm"
+      />
 
       <div className="flex flex-wrap gap-2">
         <button

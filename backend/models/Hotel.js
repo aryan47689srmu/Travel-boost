@@ -65,6 +65,12 @@ const hotelSchema = new mongoose.Schema(
       min: 0,
     },
 
+    roomsTotal: {
+      type: Number,
+      default: 10,
+      min: 1,
+    },
+
     vendor: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

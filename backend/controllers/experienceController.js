@@ -5,7 +5,7 @@ const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) =>
 exports.listExperiences = async (req, res) => {
   try {
     const { destination, category } = req.query;
-    const filter = {};
+    const filter = { verificationStatus: "verified" };
     if (destination) filter.destination = new RegExp(destination, "i");
     if (category) filter.category = category;
     const experiences = await Experience.find(filter).sort({ rating: -1 }).limit(100);
@@ -17,7 +17,7 @@ exports.listExperiences = async (req, res) => {
 
 exports.getExperience = async (req, res) => {
   try {
-    const exp = await Experience.findById(req.params.id);
+    const exp = await Experience.findOne({ _id: req.params.id, verificationStatus: "verified" });
     if (!exp) return res.status(404).json({ message: "Experience not found" });
     res.json(exp);
   } catch (err) {
