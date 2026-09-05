@@ -5,6 +5,9 @@ const Hotel = require("./models/Hotel");
 const Experience = require("./models/Experience");
 const TravelService = require("./models/TravelService");
 
+// GeoJSON requires coordinates as [longitude, latitude] — NOT [latitude, longitude].
+const point = (lng, lat) => ({ type: "Point", coordinates: [lng, lat] });
+
 async function seed() {
   await connectDB();
 
@@ -36,6 +39,7 @@ async function seed() {
       amenities: ["WiFi", "Mountain View", "Breakfast"],
       tags: ["adventure", "nature"],
       vendor: vendor._id,
+      location: point(77.1892, 32.2432),  // Manali town center, HP
       verificationStatus: "verified",
     },
     {
@@ -49,6 +53,7 @@ async function seed() {
       amenities: ["Pool", "Beach Access", "Bar"],
       tags: ["beach", "nightlife"],
       vendor: vendor._id,
+      location: point(73.7623, 15.5449),  // Calangute Beach, Goa
       verificationStatus: "verified",
     },
     {
@@ -62,6 +67,7 @@ async function seed() {
       amenities: ["Lake View", "Heritage", "Spa"],
       tags: ["cultural", "heritage"],
       vendor: vendor._id,
+      location: point(73.6833, 24.5764),  // Lake Pichola, Udaipur
       verificationStatus: "verified",
     },
     {
@@ -75,6 +81,7 @@ async function seed() {
       amenities: ["Tea Estate Tour", "Mountain View"],
       tags: ["nature", "cultural"],
       vendor: vendor._id,
+      location: point(88.2663, 27.041),  // Darjeeling Mall Road
       verificationStatus: "verified",
     },
     {
@@ -88,6 +95,7 @@ async function seed() {
       amenities: ["Scuba Diving", "Private Beach"],
       tags: ["beach", "adventure"],
       vendor: vendor._id,
+      location: point(92.7265, 11.6234),  // Port Blair, Andaman
       verificationStatus: "verified",
     },
     {
@@ -102,6 +110,7 @@ async function seed() {
       amenities: ["WiFi", "Breakfast", "Airport Transfer"],
       tags: ["cultural", "food", "heritage"],
       vendor: vendor._id,
+      location: point(80.9462, 26.8467),  // Hazratganj, Lucknow
       verificationStatus: "verified",
     },
   ]);
@@ -115,6 +124,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.7,
       vendor: vendor._id,
+      location: point(77.1522, 32.3172),  // Solang Valley, near Manali
       verificationStatus: "verified",
     },
     {
@@ -125,6 +135,7 @@ async function seed() {
       durationHours: 3,
       rating: 4.9,
       vendor: vendor._id,
+      location: point(92.6586, 11.596),  // Havelock-side dive point, Andaman
       verificationStatus: "verified",
     },
     {
@@ -135,6 +146,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.6,
       vendor: vendor._id,
+      location: point(73.6832, 24.5764),  // City Palace, Udaipur
       verificationStatus: "verified",
     },
     {
@@ -145,6 +157,7 @@ async function seed() {
       durationHours: 3,
       rating: 4.8,
       vendor: vendor._id,
+      location: point(73.7898, 15.4909),  // Panaji riverside, Goa
       verificationStatus: "verified",
     },
     {
@@ -155,6 +168,7 @@ async function seed() {
       durationHours: 1,
       rating: 4.5,
       vendor: vendor._id,
+      location: point(88.2467, 27.0167),  // Happy Valley Tea Estate, Darjeeling
       verificationStatus: "verified",
     },
     {
@@ -165,6 +179,7 @@ async function seed() {
       durationHours: 2,
       rating: 4.6,
       vendor: vendor._id,
+      location: point(77.1892, 32.2432),  // Manali town center
       verificationStatus: "verified",
     },
     {
@@ -175,16 +190,17 @@ async function seed() {
       durationHours: 3,
       rating: 4.8,
       vendor: vendor._id,
+      location: point(80.9269, 26.87),  // Chowk, Old Lucknow
       verificationStatus: "verified",
     },
   ]);
 
   await TravelService.insertMany([
-    { title: "Manali Mountain Taxi", type: "Taxi", destination: "Manali", price: 1800, capacity: 4, durationHours: 8, rating: 4.7, vendor: vendor._id, verificationStatus: "verified" },
-    { title: "Goa Airport Beach Transfer", type: "Airport Transfer", destination: "Goa", price: 1200, capacity: 4, durationHours: 2, rating: 4.8, vendor: vendor._id, verificationStatus: "verified" },
-    { title: "Udaipur Heritage Guide", type: "Local Guide", destination: "Udaipur", price: 1500, capacity: 8, durationHours: 4, rating: 4.9, vendor: vendor._id, verificationStatus: "verified" },
-    { title: "Darjeeling Hill Car Rental", type: "Car Rental", destination: "Darjeeling", price: 2400, capacity: 4, durationHours: 10, rating: 4.6, vendor: vendor._id, verificationStatus: "verified" },
-    { title: "Lucknow Heritage Taxi", type: "Taxi", destination: "Lucknow", price: 1400, capacity: 4, durationHours: 6, rating: 4.7, vendor: vendor._id, verificationStatus: "verified" },
+    { title: "Manali Mountain Taxi", type: "Taxi", destination: "Manali", price: 1800, capacity: 4, durationHours: 8, rating: 4.7, vendor: vendor._id, verificationStatus: "verified", location: point(77.1892, 32.2432) },
+    { title: "Goa Airport Beach Transfer", type: "Airport Transfer", destination: "Goa", price: 1200, capacity: 4, durationHours: 2, rating: 4.8, vendor: vendor._id, verificationStatus: "verified", location: point(73.8314, 15.3808) },
+    { title: "Udaipur Heritage Guide", type: "Local Guide", destination: "Udaipur", price: 1500, capacity: 8, durationHours: 4, rating: 4.9, vendor: vendor._id, verificationStatus: "verified", location: point(73.6833, 24.5764) },
+    { title: "Darjeeling Hill Car Rental", type: "Car Rental", destination: "Darjeeling", price: 2400, capacity: 4, durationHours: 10, rating: 4.6, vendor: vendor._id, verificationStatus: "verified", location: point(88.2663, 27.041) },
+    { title: "Lucknow Heritage Taxi", type: "Taxi", destination: "Lucknow", price: 1400, capacity: 4, durationHours: 6, rating: 4.7, vendor: vendor._id, verificationStatus: "verified", location: point(80.9462, 26.8467) },
   ]);
 
   console.log("Seed complete: 2 users, 6 hotels, 7 experiences, 5 travel services created.");
