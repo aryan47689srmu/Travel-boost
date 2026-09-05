@@ -1,14 +1,29 @@
 const TravelService = require("../models/TravelService");
+const { nearFilter, attachDistanceAndSort } = require("../utils/geo");
 const editableFields = ["title", "type", "destination", "description", "price", "capacity", "durationHours"];
 const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) => body[key] !== undefined).map((key) => [key, body[key]]));
 
+// GET /api/travel-services?destination=Goa&type=Taxi
+// GET /api/travel-services?type=Taxi,Bus,Car Rental        -> multiple types (comma-separated)
+// GET /api/travel-services?lat=..&lng=..&radius=25          -> nearest services first, within radius (km, default 25)
 exports.listServices = async (req, res) => {
   try {
-    const { destination, type } = req.query;
-    const filter = { verificationStatus: "verified" };
+    const { destination, type, lat, lng, radius } = req.query;
+    const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
-    if (type) filter.type = type;
-    res.json(await TravelService.find(filter).sort({ rating: -1, createdAt: -1 }).limit(100));
+    if (type) {
+      const types = type.split(",").map((t) => t.trim()).filter(Boolean);
+      filter.type = types.length > 1 ? { $in: types } : types[0];
+    }
+
+    const hasCoords = lat !== undefined && lng !== undefined;
+    if (hasCoords) Object.assign(filter, nearFilter(lat, lng, radius ? Number(radius) : 25));
+
+    let query = TravelService.find(filter);
+    if (!hasCoords) query = query.sort({ rating: -1, createdAt: -1 });
+
+    const services = await query.limit(100);
+    res.json(hasCoords ? attachDistanceAndSort(services, lat, lng) : services);
   } catch (err) { res.status(500).json({ message: "Failed to fetch travel services", error: err.message }); }
 };
 

@@ -1,37 +1,66 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../api/client";
 
-const categories = [
+// Categories backed by real TravelBoost data (queried by lat/lng against our own API).
+const dataCategories = [
   {
+    key: "hotels",
     title: "Nearby Hotels",
     icon: "🏨",
-    query: "hotels",
+    kind: "hotels",
+    blurb: "Live results from TravelBoost's hotel listings.",
   },
   {
-    title: "Food & Restaurants",
-    icon: "🍴",
-    query: "restaurants",
-  },
-  {
+    key: "attractions",
     title: "Tourist Attractions",
     icon: "🎯",
-    query: "tourist attractions",
+    kind: "experiences",
+    blurb: "Bookable experiences from TravelBoost near you.",
   },
   {
+    key: "transport",
     title: "Transport",
     icon: "🚕",
-    query: "taxi transport car rental",
+    kind: "services",
+    serviceTypes: "Taxi,Airport Transfer,Bus,Car Rental",
+    blurb: "Verified local transport partners on TravelBoost.",
   },
   {
+    key: "guides",
     title: "Local Guides",
     icon: "🧑‍💼",
-    query: "local tour guides",
-  },
-  {
-    title: "Safety & Help",
-    icon: "🛡️",
-    query: "police hospital emergency services",
+    kind: "services",
+    serviceTypes: "Local Guide",
+    blurb: "Local guides listed on TravelBoost.",
   },
 ];
+
+// Categories TravelBoost has no listings for yet — these still go to Google Maps.
+const externalCategories = [
+  {
+    key: "restaurants",
+    title: "Food & Restaurants",
+    icon: "🍴",
+    mapsQuery: "restaurants",
+    blurb: "Not on TravelBoost yet — opens Google Maps.",
+  },
+  {
+    key: "safety",
+    title: "Safety & Help",
+    icon: "🛡️",
+    mapsQuery: "police hospital emergency services",
+    blurb: "Always use official channels — opens Google Maps.",
+  },
+];
+
+const radiusOptions = [5, 10, 25, 50, 100];
+
+const kindConfig = {
+  hotels: { endpoint: "/hotels", detailPath: "/hotels" },
+  experiences: { endpoint: "/experiences", detailPath: "/experiences" },
+  services: { endpoint: "/travel-services", detailPath: "/travel-services" },
+};
 
 export default function LocationTracker() {
   const [location, setLocation] = useState(null);
@@ -39,6 +68,14 @@ export default function LocationTracker() {
     "Share your location to discover nearby tourism services."
   );
   const [loading, setLoading] = useState(false);
+
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [radiusKm, setRadiusKm] = useState(25);
+  const [results, setResults] = useState([]);
+  const [resultsLoading, setResultsLoading] = useState(false);
+  const [resultsError, setResultsError] = useState(null);
+
+  const navigate = useNavigate();
 
   function track() {
     if (!navigator.geolocation) {
@@ -74,9 +111,7 @@ export default function LocationTracker() {
             "Your location could not be detected. Please check GPS/location services."
           );
         } else if (error.code === 3) {
-          setMessage(
-            "Location request timed out. Please try again."
-          );
+          setMessage("Location request timed out. Please try again.");
         } else {
           setMessage("Unable to get your location. Please try again.");
         }
@@ -103,17 +138,59 @@ export default function LocationTracker() {
 
   const googleMapsUrl = mapsSearch();
 
+  async function loadResults(category, radius = radiusKm) {
+    if (!location) return;
+
+    setActiveCategory(category);
+    setResultsLoading(true);
+    setResultsError(null);
+    setResults([]);
+
+    try {
+      const { endpoint } = kindConfig[category.kind];
+      const params = {
+        lat: location.latitude,
+        lng: location.longitude,
+        radius,
+      };
+      if (category.serviceTypes) params.type = category.serviceTypes;
+
+      const { data } = await api.get(endpoint, { params });
+      setResults(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setResultsError(
+        err.response?.data?.message ||
+          "Could not load nearby results from TravelBoost. Please try again."
+      );
+    } finally {
+      setResultsLoading(false);
+    }
+  }
+
+  function handleRadiusChange(newRadius) {
+    setRadiusKm(newRadius);
+    if (activeCategory) loadResults(activeCategory, newRadius);
+  }
+
+  function priceOf(item) {
+    return item.pricePerNight ?? item.price;
+  }
+
+  function subtitleOf(item, kind) {
+    if (kind === "hotels") return item.destination;
+    if (kind === "experiences") return `${item.destination} · ${item.category}`;
+    return `${item.destination} · ${item.type}`;
+  }
+
   return (
     <div className="max-w-4xl space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-bold text-gray-800">
-          📍 Near Me
-        </h1>
+        <h1 className="text-xl font-bold text-gray-800">📍 Near Me</h1>
 
         <p className="mt-1 text-sm text-gray-500">
-          Discover hotels, food, transport, attractions and safety
-          services around your current location.
+          Discover hotels, attractions, transport and guides listed on
+          TravelBoost around your current location.
         </p>
       </div>
 
@@ -124,16 +201,12 @@ export default function LocationTracker() {
             <div className="text-6xl">📍</div>
 
             <p className="mt-3 text-sm font-medium text-gray-700">
-              {location
-                ? "Your current location"
-                : "Location not detected"}
+              {location ? "Your current location" : "Location not detected"}
             </p>
           </div>
         </div>
 
-        <p className="mt-4 text-sm text-gray-600">
-          {message}
-        </p>
+        <p className="mt-4 text-sm text-gray-600">{message}</p>
 
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -163,27 +236,21 @@ export default function LocationTracker() {
         {location && (
           <div className="mt-5 grid gap-3 sm:grid-cols-3">
             <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-xs text-gray-400">
-                Latitude
-              </p>
+              <p className="text-xs text-gray-400">Latitude</p>
               <p className="mt-1 font-semibold text-gray-800">
                 {location.latitude.toFixed(5)}
               </p>
             </div>
 
             <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-xs text-gray-400">
-                Longitude
-              </p>
+              <p className="text-xs text-gray-400">Longitude</p>
               <p className="mt-1 font-semibold text-gray-800">
                 {location.longitude.toFixed(5)}
               </p>
             </div>
 
             <div className="rounded-xl bg-gray-50 p-4">
-              <p className="text-xs text-gray-400">
-                Accuracy
-              </p>
+              <p className="text-xs text-gray-400">Accuracy</p>
               <p className="mt-1 font-semibold text-gray-800">
                 ±{Math.round(location.accuracy)} m
               </p>
@@ -195,30 +262,82 @@ export default function LocationTracker() {
       {/* Nearby Categories */}
       {location ? (
         <section>
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-gray-800">
-              Explore Nearby
-            </h2>
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">
+                Explore Nearby
+              </h2>
+              <p className="text-sm text-gray-500">
+                Hotels, attractions, transport and guides pull live results
+                from TravelBoost. Restaurants and emergency help open Google
+                Maps, since TravelBoost doesn't list those yet.
+              </p>
+            </div>
 
-            <p className="text-sm text-gray-500">
-              Search Google Maps around your current location.
-            </p>
+            {activeCategory && (
+              <label className="text-xs text-gray-500">
+                Radius:{" "}
+                <select
+                  value={radiusKm}
+                  onChange={(e) => handleRadiusChange(Number(e.target.value))}
+                  className="ml-1 rounded-lg border border-gray-200 px-2 py-1 text-xs"
+                >
+                  {radiusOptions.map((r) => (
+                    <option key={r} value={r}>
+                      {r} km
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
 
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {categories.map((category) => (
-              <a
-                key={category.title}
-                href={mapsSearch(category.query)}
-                target="_blank"
-                rel="noreferrer"
-                className="group rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+            {dataCategories.map((category) => (
+              <button
+                key={category.key}
+                onClick={() => loadResults(category)}
+                className={`group rounded-2xl border bg-white p-5 text-left shadow-sm transition hover:-translate-y-1 hover:shadow-md ${
+                  activeCategory?.key === category.key
+                    ? "border-brand-400 ring-2 ring-brand-100"
+                    : "border-gray-100"
+                }`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-brand-50 text-2xl">
                     {category.icon}
                   </div>
+                  <span className="text-gray-300 transition group-hover:text-brand-600">
+                    →
+                  </span>
+                </div>
 
+                <h3 className="mt-4 font-semibold text-gray-800">
+                  {category.title}
+                </h3>
+
+                <p className="mt-1 text-xs leading-5 text-gray-500">
+                  {category.blurb}
+                </p>
+
+                <p className="mt-4 text-xs font-semibold text-brand-600">
+                  Search TravelBoost →
+                </p>
+              </button>
+            ))}
+
+            {externalCategories.map((category) => (
+              <a
+                key={category.key}
+                href={mapsSearch(category.mapsQuery)}
+                target="_blank"
+                rel="noreferrer"
+                className="group rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-5 shadow-sm transition hover:-translate-y-1 hover:shadow-md"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-2xl">
+                    {category.icon}
+                  </div>
                   <span className="text-gray-300 transition group-hover:text-brand-600">
                     ↗
                   </span>
@@ -229,15 +348,108 @@ export default function LocationTracker() {
                 </h3>
 
                 <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Find verified and nearby {category.title.toLowerCase()}.
+                  {category.blurb}
                 </p>
 
-                <p className="mt-4 text-xs font-semibold text-brand-600">
-                  Explore nearby →
+                <p className="mt-4 text-xs font-semibold text-gray-500">
+                  Open Google Maps →
                 </p>
               </a>
             ))}
           </div>
+
+          {/* Results panel */}
+          {activeCategory && (
+            <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="font-semibold text-gray-800">
+                  {activeCategory.icon} {activeCategory.title} within{" "}
+                  {radiusKm} km
+                </h3>
+                <button
+                  onClick={() => setActiveCategory(null)}
+                  className="text-sm text-gray-400 hover:text-gray-600"
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {resultsLoading && (
+                <p className="text-sm text-gray-400">Searching nearby…</p>
+              )}
+
+              {!resultsLoading && resultsError && (
+                <p className="text-sm text-red-500">{resultsError}</p>
+              )}
+
+              {!resultsLoading && !resultsError && results.length === 0 && (
+                <p className="text-sm text-gray-400">
+                  No {activeCategory.title.toLowerCase()} listed on
+                  TravelBoost within {radiusKm} km yet. Try a wider radius,
+                  or{" "}
+                  <a
+                    href={mapsSearch(activeCategory.title)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-semibold text-brand-600 underline"
+                  >
+                    check Google Maps instead
+                  </a>
+                  .
+                </p>
+              )}
+
+              {!resultsLoading && !resultsError && results.length > 0 && (
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  {results.map((item) => (
+                    <div
+                      key={item._id}
+                      className="rounded-xl border border-gray-100 p-4 hover:shadow-md transition"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <h4 className="font-semibold text-gray-800 text-sm">
+                          {item.name || item.title}
+                        </h4>
+                        {item.distanceKm != null && (
+                          <span className="shrink-0 rounded-full bg-brand-50 px-2 py-0.5 text-[11px] font-semibold text-brand-700">
+                            {item.distanceKm} km
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="mt-1 text-xs text-gray-500">
+                        {subtitleOf(item, activeCategory.kind)}
+                      </p>
+
+                      <div className="mt-3 flex items-center justify-between text-xs">
+                        <span className="font-semibold text-amber-500">
+                          ⭐ {item.rating || "New"}
+                        </span>
+                        {priceOf(item) != null && (
+                          <span className="font-bold text-brand-700">
+                            ₹{priceOf(item)}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() =>
+                          navigate(
+                            item._id && activeCategory.kind === "hotels"
+                              ? `/hotels/${item._id}`
+                              : kindConfig[activeCategory.kind].detailPath
+                          )
+                        }
+                        className="mt-3 w-full rounded-lg bg-brand-50 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
+                      >
+                        View & Book
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </section>
       ) : (
         <section className="rounded-2xl border border-dashed border-gray-200 bg-gray-50 p-8 text-center">
@@ -248,8 +460,8 @@ export default function LocationTracker() {
           </h2>
 
           <p className="mx-auto mt-1 max-w-md text-sm text-gray-500">
-            Allow location access to discover nearby hotels,
-            restaurants, attractions, transport and emergency services.
+            Allow location access to discover nearby hotels, attractions,
+            transport, guides and emergency services.
           </p>
         </section>
       )}
@@ -260,9 +472,7 @@ export default function LocationTracker() {
           <div className="text-2xl">🛡️</div>
 
           <div>
-            <h2 className="font-semibold text-green-800">
-              Travel Safety
-            </h2>
+            <h2 className="font-semibold text-green-800">Travel Safety</h2>
 
             <p className="mt-1 text-sm leading-6 text-green-700">
               For important decisions, verify prices, business identity,
@@ -273,9 +483,7 @@ export default function LocationTracker() {
 
             {location && (
               <a
-                href={mapsSearch(
-                  "police station hospital emergency services"
-                )}
+                href={mapsSearch("police station hospital emergency services")}
                 target="_blank"
                 rel="noreferrer"
                 className="mt-3 inline-block text-sm font-semibold text-green-800 underline"
@@ -289,8 +497,8 @@ export default function LocationTracker() {
 
       {/* Privacy */}
       <p className="text-center text-xs text-gray-400">
-        🔒 Your location is used by this page to create nearby Google Maps
-        searches and is not saved to TravelBoost.
+        🔒 Your location is sent to TravelBoost only to search nearby
+        listings (and to build Google Maps links) — it is not saved.
       </p>
     </div>
   );

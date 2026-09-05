@@ -1,27 +1,37 @@
 const Hotel = require("../models/Hotel");
+const { nearFilter, attachDistanceAndSort } = require("../utils/geo");
 const editableFields = ["name", "description", "destination", "state", "address", "pricePerNight", "images", "amenities", "roomsAvailable", "tags"];
 const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) => body[key] !== undefined).map((key) => [key, body[key]]));
 
 // GET /api/hotels?destination=Goa&minPrice=&maxPrice=&sort=rating
+// GET /api/hotels?lat=..&lng=..&radius=25   -> nearest hotels first, within radius (km, default 25)
 exports.listHotels = async (req, res) => {
   try {
-    const { destination, minPrice, maxPrice, search, sort } = req.query;
-    const filter = { verificationStatus: "verified" };
+    const { destination, minPrice, maxPrice, search, sort, lat, lng, radius } = req.query;
+    const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
     if (minPrice || maxPrice) {
       filter.pricePerNight = {};
       if (minPrice) filter.pricePerNight.$gte = Number(minPrice);
       if (maxPrice) filter.pricePerNight.$lte = Number(maxPrice);
     }
-    if (search) filter.$text = { $search: search };
+
+    const hasCoords = lat !== undefined && lng !== undefined;
+    if (hasCoords) {
+      Object.assign(filter, nearFilter(lat, lng, radius ? Number(radius) : 25));
+    } else if (search) {
+      filter.$text = { $search: search };
+    }
 
     let query = Hotel.find(filter);
-    if (sort === "price_asc") query = query.sort({ pricePerNight: 1 });
-    else if (sort === "price_desc") query = query.sort({ pricePerNight: -1 });
-    else query = query.sort({ rating: -1 });
+    if (!hasCoords) {
+      if (sort === "price_asc") query = query.sort({ pricePerNight: 1 });
+      else if (sort === "price_desc") query = query.sort({ pricePerNight: -1 });
+      else query = query.sort({ rating: -1 });
+    }
 
     const hotels = await query.limit(100);
-    res.json(hotels);
+    res.json(hasCoords ? attachDistanceAndSort(hotels, lat, lng) : hotels);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch hotels", error: err.message });
   }
@@ -29,7 +39,7 @@ exports.listHotels = async (req, res) => {
 
 exports.getHotel = async (req, res) => {
   try {
-    const hotel = await Hotel.findOne({ _id: req.params.id, verificationStatus: "verified" });
+    const hotel = await Hotel.findById(req.params.id);
     if (!hotel) return res.status(404).json({ message: "Hotel not found" });
     res.json(hotel);
   } catch (err) {

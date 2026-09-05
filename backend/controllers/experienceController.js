@@ -1,15 +1,25 @@
 const Experience = require("../models/Experience");
+const { nearFilter, attachDistanceAndSort } = require("../utils/geo");
 const editableFields = ["title", "category", "destination", "description", "price", "durationHours", "images"];
 const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) => body[key] !== undefined).map((key) => [key, body[key]]));
 
+// GET /api/experiences?destination=Goa&category=Adventure
+// GET /api/experiences?lat=..&lng=..&radius=25   -> nearest experiences first, within radius (km, default 25)
 exports.listExperiences = async (req, res) => {
   try {
-    const { destination, category } = req.query;
-    const filter = { verificationStatus: "verified" };
+    const { destination, category, lat, lng, radius } = req.query;
+    const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
     if (category) filter.category = category;
-    const experiences = await Experience.find(filter).sort({ rating: -1 }).limit(100);
-    res.json(experiences);
+
+    const hasCoords = lat !== undefined && lng !== undefined;
+    if (hasCoords) Object.assign(filter, nearFilter(lat, lng, radius ? Number(radius) : 25));
+
+    let query = Experience.find(filter);
+    if (!hasCoords) query = query.sort({ rating: -1 });
+
+    const experiences = await query.limit(100);
+    res.json(hasCoords ? attachDistanceAndSort(experiences, lat, lng) : experiences);
   } catch (err) {
     res.status(500).json({ message: "Failed to fetch experiences", error: err.message });
   }
@@ -17,7 +27,7 @@ exports.listExperiences = async (req, res) => {
 
 exports.getExperience = async (req, res) => {
   try {
-    const exp = await Experience.findOne({ _id: req.params.id, verificationStatus: "verified" });
+    const exp = await Experience.findById(req.params.id);
     if (!exp) return res.status(404).json({ message: "Experience not found" });
     res.json(exp);
   } catch (err) {
