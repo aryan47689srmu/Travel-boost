@@ -19,7 +19,7 @@ export default function Sidebar() {
     : "/register?role=vendor";
 
   return (
-    <aside className="sticky top-0 hidden h-screen self-start overflow-hidden border-r border-gray-100 bg-white px-3 py-4 lg:flex lg:w-60 lg:shrink-0 lg:flex-col">
+    <aside className="sticky top-0 hidden h-screen self-start overflow-hidden border-r border-gray-100 bg-white px-3 py-4 xl:flex xl:w-60 xl:shrink-0 xl:flex-col">
       <Link to="/" className="mb-5 flex items-center gap-2 px-2">
         <span className="text-brand-600 text-2xl">✈️</span>
         <div>

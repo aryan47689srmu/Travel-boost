@@ -73,7 +73,7 @@ export default function HotelDetail() {
         <ReviewList itemType="Hotel" itemId={hotel._id} />
       </div>
 
-      <div className="bg-white border border-gray-100 rounded-2xl p-5 h-fit sticky top-6">
+      <div className="bg-white border border-gray-100 rounded-2xl p-5 h-fit lg:sticky lg:top-6">
         <p className="text-xl font-bold text-brand-700 mb-4">{formatCurrency(hotel.pricePerNight)}<span className="text-sm text-gray-400 font-normal">/night/person</span></p>
 
         <label className="text-xs font-medium text-gray-600">Check-in</label>

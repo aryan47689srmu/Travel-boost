@@ -4,6 +4,21 @@
 
 body {
   font-family: "Inter", system-ui, sans-serif;
+  min-width: 320px;
+  overflow-x: hidden;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+@media (max-width: 639px) {
+  .grid.grid-cols-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 @media (min-width: 1280px) and (max-width: 1535px) {
