@@ -18,8 +18,8 @@ const dataCategories = [
     key: "attractions",
     title: "Tourist Attractions",
     icon: "🎯",
-    kind: "experiences",
-    blurb: "Bookable experiences from TravelBoost near you.",
+    kind: "places",
+    blurb: "Tourist places from Explore listed on TravelBoost.",
   },
   {
     key: "transport",
@@ -63,6 +63,7 @@ const kindConfig = {
   hotels: { endpoint: "/hotels", detailPath: "/hotels" },
   experiences: { endpoint: "/experiences", detailPath: "/experiences" },
   services: { endpoint: "/travel-services", detailPath: "/travel-services" },
+  places: { endpoint: "/places", detailPath: "/explore" },
 };
 
 function RecenterMap({ location }) {
@@ -222,6 +223,7 @@ export default function LocationTracker() {
   function subtitleOf(item, kind) {
     if (kind === "hotels") return item.destination;
     if (kind === "experiences") return `${item.destination} · ${item.category}`;
+    if (kind === "places") return `${item.destination}${item.state ? ` · ${item.state}` : ""}`;
     return `${item.destination} · ${item.type}`;
   }
 
@@ -489,7 +491,11 @@ export default function LocationTracker() {
                         }}
                         className="mt-3 w-full rounded-lg bg-brand-50 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
                       >
-                        {activeCategory.kind === "services" ? "Available near you" : "View & Book"}
+                        {activeCategory.kind === "services"
+                          ? "Available near you"
+                          : activeCategory.kind === "places"
+                          ? "View in Explore"
+                          : "View & Book"}
                       </button>
                     </div>
                   ))}
