@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 
-const emptyHotel = { name: "", destination: "", state: "", pricePerNight: "", roomsAvailable: 5, amenities: "" };
+const emptyHotel = { name: "", destination: "", state: "", pricePerNight: "", roomsAvailable: 5, amenities: "", latitude: "", longitude: "" };
 const emptyExperience = { title: "", destination: "", category: "Adventure", price: "", durationHours: 2, description: "" };
 const emptyService = { title: "", destination: "", type: "Taxi", price: "", capacity: 4, durationHours: 2 };
 
@@ -34,9 +34,35 @@ export default function VendorDashboard() {
   async function submitHotel(e) {
     e.preventDefault(); setMessage("");
     try {
-      await api.post("/hotels", { ...hotelForm, pricePerNight: Number(hotelForm.pricePerNight), roomsAvailable: Number(hotelForm.roomsAvailable), amenities: hotelForm.amenities.split(",").map(x => x.trim()).filter(Boolean) });
+      await api.post("/hotels", {
+        ...hotelForm,
+        pricePerNight: Number(hotelForm.pricePerNight),
+        roomsAvailable: Number(hotelForm.roomsAvailable),
+        amenities: hotelForm.amenities.split(",").map(x => x.trim()).filter(Boolean),
+        location: {
+          type: "Point",
+          coordinates: [Number(hotelForm.longitude), Number(hotelForm.latitude)],
+        },
+      });
       setHotelForm(emptyHotel); setMessage("Hotel listed successfully."); load();
     } catch (err) { setMessage(err.response?.data?.message || "Could not list hotel."); }
+  }
+
+  function useCurrentLocation() {
+    if (!navigator.geolocation) {
+      setMessage("Location tracking is not supported by this browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      ({ coords }) => setHotelForm((current) => ({
+        ...current,
+        latitude: coords.latitude.toFixed(6),
+        longitude: coords.longitude.toFixed(6),
+      })),
+      () => setMessage("Could not get your location. Enter the coordinates manually."),
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }
+    );
   }
 
   async function submitExperience(e) {
@@ -69,6 +95,11 @@ export default function VendorDashboard() {
         <h2 className="font-semibold">List a hotel or homestay</h2>
         {[['name','Property name'],['destination','Destination'],['state','State']].map(([key,label]) => <input key={key} required className={field} placeholder={label} value={hotelForm[key]} onChange={e=>setHotelForm({...hotelForm,[key]:e.target.value})}/>)}
         <div className="grid grid-cols-2 gap-3"><input required min="1" type="number" className={field} placeholder="Price per night" value={hotelForm.pricePerNight} onChange={e=>setHotelForm({...hotelForm,pricePerNight:e.target.value})}/><input required min="0" type="number" className={field} placeholder="Rooms available" value={hotelForm.roomsAvailable} onChange={e=>setHotelForm({...hotelForm,roomsAvailable:e.target.value})}/></div>
+        <div className="grid grid-cols-2 gap-3">
+          <input required min="-90" max="90" step="any" type="number" className={field} placeholder="Latitude" value={hotelForm.latitude} onChange={e=>setHotelForm({...hotelForm,latitude:e.target.value})}/>
+          <input required min="-180" max="180" step="any" type="number" className={field} placeholder="Longitude" value={hotelForm.longitude} onChange={e=>setHotelForm({...hotelForm,longitude:e.target.value})}/>
+        </div>
+        <button type="button" onClick={useCurrentLocation} className="text-left text-xs font-semibold text-brand-700 hover:underline">📍 Use my current location for this hotel</button>
         <input className={field} placeholder="Amenities, comma separated" value={hotelForm.amenities} onChange={e=>setHotelForm({...hotelForm,amenities:e.target.value})}/>
         <button className="bg-brand-600 text-white rounded-lg px-4 py-2 text-sm font-semibold">Publish hotel</button>
       </form>

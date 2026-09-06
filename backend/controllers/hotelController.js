@@ -1,7 +1,14 @@
 const Hotel = require("../models/Hotel");
 const { nearFilter, attachDistanceAndSort } = require("../utils/geo");
-const editableFields = ["name", "description", "destination", "state", "address", "pricePerNight", "images", "amenities", "roomsAvailable", "tags"];
+const editableFields = ["name", "description", "destination", "state", "address", "pricePerNight", "images", "amenities", "roomsAvailable", "tags", "location"];
 const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) => body[key] !== undefined).map((key) => [key, body[key]]));
+const validLocation = (location) => {
+  const coordinates = location?.coordinates;
+  return location?.type === "Point" && Array.isArray(coordinates) && coordinates.length === 2
+    && Number.isFinite(Number(coordinates[0])) && Number.isFinite(Number(coordinates[1]))
+    && Number(coordinates[0]) >= -180 && Number(coordinates[0]) <= 180
+    && Number(coordinates[1]) >= -90 && Number(coordinates[1]) <= 90;
+};
 
 // GET /api/hotels?destination=Goa&minPrice=&maxPrice=&sort=rating
 // GET /api/hotels?lat=..&lng=..&radius=25   -> nearest hotels first, within radius (km, default 25)
@@ -58,6 +65,10 @@ exports.myHotels = async (req, res) => {
 
 exports.createHotel = async (req, res) => {
   try {
+    if (!validLocation(req.body.location)) {
+      return res.status(400).json({ message: "Valid hotel latitude and longitude are required" });
+    }
+
     const hotel = await Hotel.create({ ...pickEditable(req.body), vendor: req.user.id });
     res.status(201).json(hotel);
   } catch (err) {
@@ -67,6 +78,10 @@ exports.createHotel = async (req, res) => {
 
 exports.updateHotel = async (req, res) => {
   try {
+    if (req.body.location !== undefined && !validLocation(req.body.location)) {
+      return res.status(400).json({ message: "Valid hotel latitude and longitude are required" });
+    }
+
     const hotel = await Hotel.findOneAndUpdate(
       { _id: req.params.id, vendor: req.user.id },
       pickEditable(req.body),

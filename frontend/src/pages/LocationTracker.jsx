@@ -74,6 +74,7 @@ export default function LocationTracker() {
   const [results, setResults] = useState([]);
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState(null);
+  const [showingAllListings, setShowingAllListings] = useState(false);
 
   const navigate = useNavigate();
 
@@ -88,11 +89,14 @@ export default function LocationTracker() {
 
     navigator.geolocation.getCurrentPosition(
       ({ coords }) => {
-        setLocation({
+        const nextLocation = {
           latitude: coords.latitude,
           longitude: coords.longitude,
           accuracy: coords.accuracy,
-        });
+        };
+
+        setLocation(nextLocation);
+        loadResults(dataCategories[0], radiusKm, nextLocation);
 
         setLoading(false);
         setMessage(
@@ -136,27 +140,34 @@ export default function LocationTracker() {
     )}`;
   }
 
-  const googleMapsUrl = mapsSearch();
-
-  async function loadResults(category, radius = radiusKm) {
-    if (!location) return;
+  async function loadResults(category, radius = radiusKm, currentLocation = location) {
+    if (!currentLocation) return;
 
     setActiveCategory(category);
     setResultsLoading(true);
     setResultsError(null);
     setResults([]);
+    setShowingAllListings(false);
 
     try {
       const { endpoint } = kindConfig[category.kind];
       const params = {
-        lat: location.latitude,
-        lng: location.longitude,
+        lat: currentLocation.latitude,
+        lng: currentLocation.longitude,
         radius,
       };
       if (category.serviceTypes) params.type = category.serviceTypes;
 
       const { data } = await api.get(endpoint, { params });
-      setResults(Array.isArray(data) ? data : []);
+      const nearbyResults = Array.isArray(data) ? data : [];
+
+      if (category.kind === "hotels" && nearbyResults.length === 0) {
+        const allListings = await api.get(endpoint);
+        setResults(Array.isArray(allListings.data) ? allListings.data : []);
+        setShowingAllListings(true);
+      } else {
+        setResults(nearbyResults);
+      }
     } catch (err) {
       setResultsError(
         err.response?.data?.message ||
@@ -221,16 +232,6 @@ export default function LocationTracker() {
               : "📍 Use My Current Location"}
           </button>
 
-          {location && (
-            <a
-              href={googleMapsUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="rounded-lg border border-brand-200 px-5 py-2.5 text-sm font-semibold text-brand-700 hover:bg-brand-50"
-            >
-              🗺️ Open Google Maps
-            </a>
-          )}
         </div>
 
         {location && (
@@ -269,8 +270,8 @@ export default function LocationTracker() {
               </h2>
               <p className="text-sm text-gray-500">
                 Hotels, attractions, transport and guides pull live results
-                from TravelBoost. Restaurants and emergency help open Google
-                Maps, since TravelBoost doesn't list those yet.
+                from TravelBoost. Choose a category to search listings near
+                your current location.
               </p>
             </div>
 
@@ -363,8 +364,10 @@ export default function LocationTracker() {
             <div className="mt-6 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
               <div className="mb-4 flex items-center justify-between">
                 <h3 className="font-semibold text-gray-800">
-                  {activeCategory.icon} {activeCategory.title} within{" "}
-                  {radiusKm} km
+                  {activeCategory.icon} {activeCategory.title}{" "}
+                  {showingAllListings
+                    ? "listed on TravelBoost"
+                    : `within ${radiusKm} km`}
                 </h3>
                 <button
                   onClick={() => setActiveCategory(null)}
@@ -385,17 +388,7 @@ export default function LocationTracker() {
               {!resultsLoading && !resultsError && results.length === 0 && (
                 <p className="text-sm text-gray-400">
                   No {activeCategory.title.toLowerCase()} listed on
-                  TravelBoost within {radiusKm} km yet. Try a wider radius,
-                  or{" "}
-                  <a
-                    href={mapsSearch(activeCategory.title)}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="font-semibold text-brand-600 underline"
-                  >
-                    check Google Maps instead
-                  </a>
-                  .
+                  TravelBoost yet.
                 </p>
               )}
 
@@ -498,7 +491,7 @@ export default function LocationTracker() {
       {/* Privacy */}
       <p className="text-center text-xs text-gray-400">
         🔒 Your location is sent to TravelBoost only to search nearby
-        listings (and to build Google Maps links) — it is not saved.
+        listings — it is not saved.
       </p>
     </div>
   );
