@@ -73,8 +73,7 @@ app.use(
 // Middleware
 // ===============================
 
-app.use(express.json());
-
+app.use(express.json({ limit: "15mb" }));
 // ===============================
 // Health Check
 // ===============================
@@ -123,9 +122,13 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error(err.stack);
 
-  res.status(500).json({
-    message: "Internal server error",
-  });
+  const status = err.status || err.statusCode || 500;
+  const message =
+    status === 413
+      ? "Upload too large. Please use smaller images."
+      : err.message || "Internal server error";
+
+  res.status(status).json({ message });
 });
 
 // ===============================
