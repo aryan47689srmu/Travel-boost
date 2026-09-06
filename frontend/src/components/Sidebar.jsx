@@ -55,7 +55,7 @@ export default function Sidebar() {
       </nav>
 
       <div className="mt-4 rounded-xl bg-gradient-to-br from-brand-600 to-brand-800 p-3 text-white">
-        <p className="text-sm font-semibold leading-tight">List your Hotel / Homestay</p>
+        <p className="text-sm font-semibold leading-tight">List your buisness</p>
         <p className="mb-2 mt-1 text-[11px] leading-tight text-brand-100">Grow your business with us</p>
         <NavLink
           to={vendorDestination}
