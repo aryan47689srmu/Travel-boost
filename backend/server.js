@@ -8,6 +8,7 @@ const connectDB = require("./config/db");
 // Routes
 const authRoutes = require("./routes/auth");
 const hotelRoutes = require("./routes/hotels");
+const placeRoutes = require("./routes/places");
 const experienceRoutes = require("./routes/experiences");
 const bookingRoutes = require("./routes/bookings");
 const plannerRoutes = require("./routes/planner");
@@ -92,6 +93,8 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 
 app.use("/api/hotels", hotelRoutes);
+
+app.use("/api/places", placeRoutes);
 
 app.use("/api/experiences", experienceRoutes);
 
