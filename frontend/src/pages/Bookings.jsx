@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../api/client";
+import { useCurrency } from "../context/CurrencyContext";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
 
@@ -11,6 +12,7 @@ const statusColor = {
 };
 
 export default function Bookings() {
+  const { formatCurrency } = useCurrency();
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
   const [error, setError] = useState("");
@@ -124,7 +126,7 @@ export default function Bookings() {
           </div>
 
           <span className="font-semibold text-brand-700">
-            ₹{b.totalPrice}
+            {formatCurrency(b.totalPrice)}
           </span>
 
           <span

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function HotelCard({ hotel }) {
+  const { formatCurrency } = useCurrency();
   return (
     <Link
       to={`/hotels/${hotel._id}`}
@@ -35,7 +37,7 @@ export default function HotelCard({ hotel }) {
           </span>
 
           <span className="font-bold text-brand-600">
-            ₹{hotel.pricePerNight || hotel.price || 0}
+            {formatCurrency(hotel.pricePerNight || hotel.price || 0)}
             <span className="text-xs text-gray-400 font-normal">
               {" "}
               / night

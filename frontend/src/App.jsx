@@ -12,10 +12,12 @@ import VendorDashboard from "./pages/VendorDashboard";
 import TravelServices from "./pages/TravelServices";
 import Profile from "./pages/Profile";
 import LocationTracker from "./pages/LocationTracker";
+import { CurrencyProvider } from "./context/CurrencyContext";
 
 export default function App() {
   return (
-    <Routes>
+    <CurrencyProvider>
+      <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
 
@@ -30,6 +32,7 @@ export default function App() {
       <Route path="/vendor/onboarding" element={<Layout><VendorDashboard /></Layout>} />
       <Route path="/profile" element={<Layout><Profile /></Layout>} />
       <Route path="/tracker" element={<Layout><LocationTracker /></Layout>} />
-    </Routes>
+      </Routes>
+    </CurrencyProvider>
   );
 }

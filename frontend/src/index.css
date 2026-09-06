@@ -5,3 +5,19 @@
 body {
   font-family: "Inter", system-ui, sans-serif;
 }
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  form[class*="absolute"][class*="bottom-6"][class*="left-6"] > div.grid {
+    grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 0.75fr) auto;
+  }
+
+  form[class*="absolute"][class*="bottom-6"][class*="left-6"] > div.grid > * {
+    min-width: 0;
+  }
+
+  form[class*="absolute"][class*="bottom-6"][class*="left-6"] > div.grid > button {
+    white-space: nowrap;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}

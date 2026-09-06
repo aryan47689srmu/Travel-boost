@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
+import { useCurrency } from "../context/CurrencyContext";
 
 export default function HotelDetail() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { formatCurrency } = useCurrency();
   const navigate = useNavigate();
   const [hotel, setHotel] = useState(null);
   const [checkIn, setCheckIn] = useState("");
@@ -30,7 +32,7 @@ export default function HotelDetail() {
         guests,
         couponCode: coupon,
       });
-      setMessage(`Booked! Total: ₹${data.totalPrice}`);
+      setMessage(`Booked! Total: ${formatCurrency(data.totalPrice)}`);
     } catch (err) {
       setMessage(err.response?.data?.message || "Booking failed");
     }
@@ -58,7 +60,7 @@ export default function HotelDetail() {
       </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-5 h-fit sticky top-6">
-        <p className="text-xl font-bold text-brand-700 mb-4">₹{hotel.pricePerNight}<span className="text-sm text-gray-400 font-normal">/night</span></p>
+        <p className="text-xl font-bold text-brand-700 mb-4">{formatCurrency(hotel.pricePerNight)}<span className="text-sm text-gray-400 font-normal">/night</span></p>
 
         <label className="text-xs font-medium text-gray-600">Check-in</label>
         <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full mt-1 mb-3 px-3 py-2 border border-gray-200 rounded-lg text-sm" />

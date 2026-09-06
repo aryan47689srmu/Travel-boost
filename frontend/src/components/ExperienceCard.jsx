@@ -1,3 +1,5 @@
+import { useCurrency } from "../context/CurrencyContext";
+
 const iconByCategory = {
   Adventure: "🧗",
   Cultural: "🏛️",
@@ -7,6 +9,7 @@ const iconByCategory = {
 };
 
 export default function ExperienceCard({ exp, onBook }) {
+  const { formatCurrency } = useCurrency();
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-4 hover:shadow-lg transition-shadow">
       <div className="flex items-center gap-3 mb-3">
@@ -20,7 +23,7 @@ export default function ExperienceCard({ exp, onBook }) {
       </div>
       <div className="flex items-center justify-between text-sm">
         <span className="text-amber-500">★ {exp.rating}</span>
-        <span className="font-semibold text-brand-700">₹{exp.price}</span>
+        <span className="font-semibold text-brand-700">{formatCurrency(exp.price)}</span>
       </div>
       <button onClick={() => onBook(exp)} className="mt-3 w-full rounded-lg bg-brand-50 py-2 text-xs font-semibold text-brand-700 hover:bg-brand-100">
         Book experience

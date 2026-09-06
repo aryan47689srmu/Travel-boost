@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
+import { useCurrency } from "../context/CurrencyContext";
 
 // Categories backed by real TravelBoost data (queried by lat/lng against our own API).
 const dataCategories = [
@@ -77,6 +78,7 @@ export default function LocationTracker() {
   const [showingAllListings, setShowingAllListings] = useState(false);
 
   const navigate = useNavigate();
+  const { formatCurrency } = useCurrency();
 
   function track() {
     if (!navigator.geolocation) {
@@ -96,7 +98,10 @@ export default function LocationTracker() {
         };
 
         setLocation(nextLocation);
-        loadResults(dataCategories[0], radiusKm, nextLocation);
+        setActiveCategory(null);
+        setResults([]);
+        setResultsError(null);
+        setShowingAllListings(false);
 
         setLoading(false);
         setMessage(
@@ -420,7 +425,7 @@ export default function LocationTracker() {
                         </span>
                         {priceOf(item) != null && (
                           <span className="font-bold text-brand-700">
-                            ₹{priceOf(item)}
+                            {formatCurrency(priceOf(item))}
                           </span>
                         )}
                       </div>
