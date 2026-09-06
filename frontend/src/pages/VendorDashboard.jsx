@@ -15,6 +15,7 @@ export default function VendorDashboard() {
   const [hotelForm, setHotelForm] = useState(emptyHotel);
   const [experienceForm, setExperienceForm] = useState(emptyExperience);
   const [serviceForm, setServiceForm] = useState(emptyService);
+  const [hotelImages, setHotelImages] = useState([]);
   const [message, setMessage] = useState("");
 
   async function load() {
@@ -39,13 +40,24 @@ export default function VendorDashboard() {
         pricePerNight: Number(hotelForm.pricePerNight),
         roomsAvailable: Number(hotelForm.roomsAvailable),
         amenities: hotelForm.amenities.split(",").map(x => x.trim()).filter(Boolean),
+        images: hotelImages,
         location: {
           type: "Point",
           coordinates: [Number(hotelForm.longitude), Number(hotelForm.latitude)],
         },
       });
-      setHotelForm(emptyHotel); setMessage("Hotel listed successfully."); load();
+      setHotelForm(emptyHotel); setHotelImages([]); setMessage("Hotel listed successfully."); load();
     } catch (err) { setMessage(err.response?.data?.message || "Could not list hotel."); }
+  }
+
+  function readHotelImages(event) {
+    const files = Array.from(event.target.files || []);
+    Promise.all(files.map((file) => new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    }))).then(setHotelImages).catch(() => setMessage("Could not read the selected files."));
   }
 
   function useCurrentLocation() {
@@ -100,6 +112,10 @@ export default function VendorDashboard() {
           <input required min="-180" max="180" step="any" type="number" className={field} placeholder="Longitude" value={hotelForm.longitude} onChange={e=>setHotelForm({...hotelForm,longitude:e.target.value})}/>
         </div>
         <button type="button" onClick={useCurrentLocation} className="text-left text-xs font-semibold text-brand-700 hover:underline">📍 Use my current location for this hotel</button>
+        <label className="block text-xs font-medium text-gray-600">Hotel files (JPG, SVG, or PDF)
+          <input type="file" accept=".jpg,.jpeg,.svg,.pdf,image/jpeg,image/svg+xml,application/pdf" multiple onChange={readHotelImages} className={`${field} mt-1 bg-white`}/>
+        </label>
+        {hotelImages.length > 0 && <p className="text-xs text-gray-500">{hotelImages.length} file{hotelImages.length === 1 ? "" : "s"} selected.</p>}
         <input className={field} placeholder="Amenities, comma separated" value={hotelForm.amenities} onChange={e=>setHotelForm({...hotelForm,amenities:e.target.value})}/>
         <button className="bg-brand-600 text-white rounded-lg px-4 py-2 text-sm font-semibold">Publish hotel</button>
       </form>

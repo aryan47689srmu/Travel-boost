@@ -10,8 +10,16 @@ const iconByCategory = {
 
 export default function ExperienceCard({ exp, onBook }) {
   const { formatCurrency } = useCurrency();
+  const image = exp.images?.[0];
   return (
     <div className="rounded-xl border border-gray-100 bg-white p-4 hover:shadow-lg transition-shadow">
+      <div className="mb-3 h-36 overflow-hidden rounded-lg bg-brand-50">
+        {image ? (
+          <img src={image} alt={exp.title} className="h-full w-full object-cover" />
+        ) : (
+          <div className="flex h-full items-center justify-center text-4xl">{iconByCategory[exp.category] || "✨"}</div>
+        )}
+      </div>
       <div className="flex items-center gap-3 mb-3">
         <span className="w-10 h-10 rounded-lg bg-brand-50 flex items-center justify-center text-lg">
           {iconByCategory[exp.category] || "✨"}

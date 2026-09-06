@@ -147,13 +147,12 @@ export default function Bookings() {
           )}
 
           {["completed", "confirmed"].includes(b.status) &&
-            new Date(b.checkOut || b.checkIn) <= new Date() &&
             !b.reviewed && (
             <button
               onClick={() => { setReviewing(b); setReviewForm({ rating: 5, comment: "" }); }}
               className="text-xs font-medium text-brand-600"
             >
-              Review
+              Give review
             </button>
           )}
         </div>
@@ -170,9 +169,20 @@ export default function Bookings() {
               <button type="button" onClick={() => setReviewing(null)} className="text-gray-400">✕</button>
             </div>
             <label className="block text-sm font-medium text-gray-700">Rating
-              <select value={reviewForm.rating} onChange={(event) => setReviewForm({ ...reviewForm, rating: event.target.value })} className="mt-1 w-full rounded-lg border p-2">
-                {[5, 4, 3, 2, 1].map((rating) => <option key={rating} value={rating}>{rating} stars</option>)}
-              </select>
+              <span className="mt-2 flex gap-1" role="radiogroup" aria-label="Rating">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    onClick={() => setReviewForm({ ...reviewForm, rating })}
+                    aria-label={`${rating} star${rating === 1 ? "" : "s"}`}
+                    aria-pressed={reviewForm.rating >= rating}
+                    className={`text-3xl ${reviewForm.rating >= rating ? "text-amber-400" : "text-gray-300"}`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </span>
             </label>
             <textarea value={reviewForm.comment} onChange={(event) => setReviewForm({ ...reviewForm, comment: event.target.value })} placeholder="What did you think?" className="min-h-24 w-full rounded-lg border p-2 text-sm" />
             <button type="submit" className="w-full rounded-lg bg-brand-600 py-2.5 text-sm font-semibold text-white">Submit verified review</button>

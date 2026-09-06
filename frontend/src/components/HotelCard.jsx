@@ -3,15 +3,16 @@ import { useCurrency } from "../context/CurrencyContext";
 
 export default function HotelCard({ hotel }) {
   const { formatCurrency } = useCurrency();
+  const image = hotel.images?.find((value) => value && !value.startsWith("data:application/pdf")) || hotel.image || hotel.imageUrl;
   return (
     <Link
       to={`/hotels/${hotel._id}`}
       className="block bg-white rounded-xl border border-gray-100 overflow-hidden shadow-sm hover:shadow-md hover:-translate-y-1 transition cursor-pointer"
     >
       <div className="h-44 bg-gray-100 overflow-hidden">
-        {hotel.image || hotel.imageUrl ? (
+        {image ? (
           <img
-            src={hotel.image || hotel.imageUrl}
+            src={image}
             alt={hotel.name || "Hotel"}
             className="w-full h-full object-cover"
           />

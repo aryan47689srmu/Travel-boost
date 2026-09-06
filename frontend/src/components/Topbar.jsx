@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 
@@ -9,10 +9,13 @@ export default function Topbar() {
   const navigate = useNavigate();
   const [menu, setMenu] = useState(null);
   const [query, setQuery] = useState("");
+  const actionsRef = useRef(null);
 
   useEffect(() => {
     function closeMenu(event) {
-      if (!event.target.closest("button")) setMenu(null);
+      if (actionsRef.current && !actionsRef.current.contains(event.target)) {
+        setMenu(null);
+      }
     }
 
     document.addEventListener("pointerdown", closeMenu);
@@ -37,7 +40,7 @@ export default function Topbar() {
         <input value={query} onChange={(event) => setQuery(event.target.value)} type="text" placeholder="Where do you want to go?" className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
       </form>
 
-      <div className="relative ml-auto flex items-center gap-3 text-sm">
+      <div ref={actionsRef} className="relative ml-auto flex items-center gap-3 text-sm">
         <div className="relative">
           <button onClick={() => setMenu(menu === "currency" ? null : "currency")} className="rounded-lg px-2 py-2 text-gray-600 hover:bg-gray-50">{currency} ▾</button>
           {menu === "currency" && <div className="absolute right-0 z-30 mt-2 w-56 rounded-xl border border-gray-100 bg-white p-2 shadow-lg">

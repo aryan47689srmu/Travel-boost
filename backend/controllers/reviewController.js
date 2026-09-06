@@ -21,9 +21,8 @@ exports.createReview = async (req, res) => {
   try {
     const { booking: bookingId, rating, comment = "" } = req.body;
     const booking = await Booking.findOne({ _id: bookingId, user: req.user.id });
-    const bookingEnd = booking?.checkOut || booking?.checkIn;
-    if (!booking || !["confirmed", "completed"].includes(booking.status) || new Date(bookingEnd) > new Date()) {
-      return res.status(400).json({ message: "Reviews are available after your booked date" });
+    if (!booking || !["confirmed", "completed"].includes(booking.status)) {
+      return res.status(400).json({ message: "Reviews require an active or completed booking" });
     }
     const score = Number(rating);
     if (!Number.isInteger(score) || score < 1 || score > 5) {

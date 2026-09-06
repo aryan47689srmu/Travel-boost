@@ -1,4 +1,5 @@
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 const links = [
   { to: "/", label: "Home", icon: "🏠" },
@@ -12,9 +13,14 @@ const links = [
 ];
 
 export default function Sidebar() {
+  const { user } = useAuth();
+  const vendorDestination = user && ["vendor", "admin"].includes(user.role)
+    ? "/vendor/onboarding"
+    : "/register?role=vendor";
+
   return (
     <aside className="hidden lg:flex lg:flex-col w-60 shrink-0 border-r border-gray-100 bg-white min-h-screen px-4 py-6">
-      <div className="flex items-center gap-2 px-2 mb-8">
+      <Link to="/" className="flex items-center gap-2 px-2 mb-8">
         <span className="text-brand-600 text-2xl">✈️</span>
         <div>
           <p className="font-extrabold text-lg leading-none">
@@ -22,7 +28,7 @@ export default function Sidebar() {
           </p>
           <p className="text-[11px] text-gray-400 tracking-wide">Explore. Experience. Excel.</p>
         </div>
-      </div>
+      </Link>
 
       <nav className="flex flex-col gap-1">
         {links.map((l) => (
@@ -52,7 +58,7 @@ export default function Sidebar() {
         <p className="font-semibold mb-1">List your Hotel / Homestay</p>
         <p className="text-xs text-brand-100 mb-4">Grow your business with us</p>
         <NavLink
-          to="/register?role=vendor"
+          to={vendorDestination}
           className="block text-center bg-white text-brand-700 text-sm font-semibold rounded-lg py-2"
         >
           Get Started →

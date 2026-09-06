@@ -31,7 +31,7 @@ export default function Register() {
 
       console.log("Registration successful:", result);
 
-      navigate("/");
+      navigate(result.role === "vendor" || result.role === "admin" ? "/vendor/onboarding" : "/");
     } catch (err) {
       console.error("Registration error:", err);
 

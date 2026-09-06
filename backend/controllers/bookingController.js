@@ -30,7 +30,7 @@ exports.createBooking = async (req, res) => {
       const nights = checkOut
         ? Math.ceil((end - start) / 86400000)
         : 1;
-      totalPrice = doc.pricePerNight * nights;
+      totalPrice = doc.pricePerNight * nights * partySize;
     } else {
       totalPrice = doc.price * (guests || 1);
     }

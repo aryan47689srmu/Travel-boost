@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
+import ReviewList from "../components/ReviewList";
 
 export default function HotelDetail() {
   const { id } = useParams();
@@ -15,6 +16,7 @@ export default function HotelDetail() {
   const [guests, setGuests] = useState(2);
   const [coupon, setCoupon] = useState("");
   const [message, setMessage] = useState("");
+  const [bookingConfirmed, setBookingConfirmed] = useState(false);
 
   useEffect(() => {
     api.get(`/hotels/${id}`).then((res) => setHotel(res.data));
@@ -32,6 +34,7 @@ export default function HotelDetail() {
         guests,
         couponCode: coupon,
       });
+      setBookingConfirmed(true);
       setMessage(`Booked! Total: ${formatCurrency(data.totalPrice)}`);
     } catch (err) {
       setMessage(err.response?.data?.message || "Booking failed");
@@ -43,9 +46,19 @@ export default function HotelDetail() {
   return (
     <div className="grid lg:grid-cols-3 gap-6">
       <div className="lg:col-span-2 space-y-4">
-        <div className="h-64 bg-gradient-to-br from-brand-300 to-brand-600 rounded-2xl flex items-center justify-center text-white text-5xl">
-          🏨
-        </div>
+        {hotel.images?.length ? (
+          <div className="grid gap-3 sm:grid-cols-2">
+            {hotel.images.map((file) => (
+              file.startsWith("data:application/pdf") ? (
+                <a key={file} href={file} target="_blank" rel="noreferrer" className="flex h-64 items-center justify-center rounded-2xl border border-dashed border-brand-200 bg-brand-50 font-semibold text-brand-700">📄 Open hotel PDF</a>
+              ) : (
+                <img key={file} src={file} alt={hotel.name} className="h-64 w-full rounded-2xl object-cover" />
+              )
+            ))}
+          </div>
+        ) : (
+          <div className="flex h-64 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-300 to-brand-600 text-5xl text-white">🏨</div>
+        )}
         <h1 className="text-2xl font-bold text-gray-800">{hotel.name}</h1>
         <p className="text-gray-500">{hotel.destination}, {hotel.state}</p>
         <p className="text-amber-500 text-sm">★ {hotel.rating} ({hotel.reviewCount} reviews)</p>
@@ -57,10 +70,11 @@ export default function HotelDetail() {
         <p className="text-gray-600 text-sm leading-relaxed">
           {hotel.description || "A comfortable, well-reviewed stay perfect for exploring the region."}
         </p>
+        <ReviewList itemType="Hotel" itemId={hotel._id} />
       </div>
 
       <div className="bg-white border border-gray-100 rounded-2xl p-5 h-fit sticky top-6">
-        <p className="text-xl font-bold text-brand-700 mb-4">{formatCurrency(hotel.pricePerNight)}<span className="text-sm text-gray-400 font-normal">/night</span></p>
+        <p className="text-xl font-bold text-brand-700 mb-4">{formatCurrency(hotel.pricePerNight)}<span className="text-sm text-gray-400 font-normal">/night/person</span></p>
 
         <label className="text-xs font-medium text-gray-600">Check-in</label>
         <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} className="w-full mt-1 mb-3 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
@@ -74,8 +88,8 @@ export default function HotelDetail() {
         <label className="text-xs font-medium text-gray-600">Coupon code (optional)</label>
         <input value={coupon} onChange={(e) => setCoupon(e.target.value.toUpperCase())} placeholder="TRAVEL20" className="w-full mt-1 mb-4 px-3 py-2 border border-gray-200 rounded-lg text-sm" />
 
-        <button onClick={handleBook} className="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-lg font-semibold text-sm">
-          {user ? "Confirm Booking" : "Sign in to Book"}
+        <button onClick={handleBook} disabled={bookingConfirmed} className="w-full bg-brand-600 hover:bg-brand-700 text-white py-2.5 rounded-lg font-semibold text-sm disabled:cursor-default disabled:opacity-80">
+          {bookingConfirmed ? "Booking confirmed" : user ? "Confirm Booking" : "Sign in to Book"}
         </button>
 
         {message && <p className="text-sm text-center mt-3 text-brand-700">{message}</p>}
