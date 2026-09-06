@@ -12,14 +12,14 @@ const links = [
   { to: "/planner", label: "AI Planner", icon: "✨", badge: "New" },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ open, onClose }) {
   const { user } = useAuth();
   const vendorDestination = user && ["vendor", "admin"].includes(user.role)
     ? "/vendor/onboarding"
     : "/register?role=vendor";
 
   return (
-    <aside className="sticky top-0 hidden h-screen self-start overflow-hidden border-r border-gray-100 bg-white px-3 py-4 xl:flex xl:w-60 xl:shrink-0 xl:flex-col">
+    <aside className={`fixed inset-y-0 left-0 z-40 flex h-screen w-72 max-w-[85vw] flex-col overflow-y-auto border-r border-gray-100 bg-white px-3 py-4 shadow-xl transition-transform duration-200 xl:sticky xl:top-0 xl:z-auto xl:h-screen xl:w-60 xl:max-w-none xl:shrink-0 xl:translate-x-0 xl:overflow-hidden xl:shadow-none ${open ? "translate-x-0" : "-translate-x-full xl:translate-x-0"}`}>
       <Link to="/" className="mb-5 flex items-center gap-2 px-2">
         <span className="text-brand-600 text-2xl">✈️</span>
         <div>
@@ -35,6 +35,7 @@ export default function Sidebar() {
           <NavLink
             key={l.to}
             to={l.to}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                 isActive

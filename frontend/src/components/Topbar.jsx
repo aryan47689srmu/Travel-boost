@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
 import api from "../api/client";
 
-export default function Topbar() {
+export default function Topbar({ onMenuClick }) {
   const { user, logout } = useAuth();
   const { currency, currencies, chooseCurrency } = useCurrency();
   const navigate = useNavigate();
@@ -76,7 +76,12 @@ export default function Topbar() {
 
   return (
     <header className="flex flex-wrap items-center gap-3 border-b border-gray-100 bg-white px-4 py-3 sm:px-5 sm:py-4 lg:flex-nowrap lg:gap-4 lg:px-6">
-      <form onSubmit={(event) => { event.preventDefault(); if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`); }} className="relative order-first min-w-0 basis-full flex-1 lg:order-none lg:basis-auto lg:max-w-md">
+      <button type="button" onClick={onMenuClick} aria-label="Open navigation" className="flex h-10 w-10 shrink-0 flex-col items-center justify-center gap-1.5 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 xl:hidden">
+        <span className="h-0.5 w-5 bg-current" />
+        <span className="h-0.5 w-5 bg-current" />
+        <span className="h-0.5 w-5 bg-current" />
+      </button>
+      <form onSubmit={(event) => { event.preventDefault(); if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`); }} className="relative order-last min-w-0 basis-full flex-1 lg:order-none lg:basis-auto lg:max-w-md">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
         <input value={query} onChange={(event) => setQuery(event.target.value)} type="text" placeholder="Where do you want to go?" className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
       </form>
