@@ -48,11 +48,11 @@ Demo login: `traveler@travelboost.com` / `password123`
 cd frontend
 cp .env.example .env
 npm install
-npm run dev                # starts UI on http://localhost:5173
+npm run dev                # starts UI on http://localhost:5174
 ```
 
-Requires a MongoDB instance — either local (`mongod`) or a free MongoDB Atlas cluster
-(paste its connection string into `backend/.env` as `MONGO_URI`).
+Requires a MongoDB instance. For local development, install MongoDB Community Server
+and use `mongodb://127.0.0.1:27017/travelboost` in `backend/.env`.
 
 ## Core API endpoints
 | Method | Route | Description |
