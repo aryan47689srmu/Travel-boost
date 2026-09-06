@@ -29,7 +29,7 @@ export default function Explore() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-xl font-bold text-gray-800">Explore Stays</h1>
+      <h1 className="text-xl font-bold text-gray-800">Explore the places</h1>
 
       <div className="flex flex-col sm:flex-row gap-3 bg-white p-4 rounded-xl border border-gray-100">
         <input

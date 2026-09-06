@@ -17,6 +17,7 @@ export default function Register() {
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -103,19 +104,24 @@ export default function Register() {
           Password
         </label>
 
-        <input
-          type="password"
-          required
-          minLength={6}
-          value={form.password}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              password: e.target.value,
-            })
-          }
-          className="w-full mt-1 mb-4 px-3 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
-        />
+        <div className="relative mt-1 mb-4">
+          <input
+            type={showPassword ? "text" : "password"}
+            required
+            minLength={6}
+            value={form.password}
+            onChange={(e) =>
+              setForm({
+                ...form,
+                password: e.target.value,
+              })
+            }
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 pr-16 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300"
+          />
+          <button type="button" onClick={() => setShowPassword((visible) => !visible)} className="absolute right-2 top-1/2 -translate-y-1/2 px-2 text-xs font-medium text-brand-600">
+            {showPassword ? "Hide" : "Show"}
+          </button>
+        </div>
 
         <label className="text-xs font-medium text-gray-600">
           I am a
