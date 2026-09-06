@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import api from "../api/client";
 import ExperienceCard from "../components/ExperienceCard";
 import { useAuth } from "../context/AuthContext";
@@ -9,9 +9,9 @@ import ReviewList from "../components/ReviewList";
 const categories = ["Adventure", "Cultural", "Food & Dining", "Nature", "Wellness"];
 
 export default function Experiences() {
-  const [params] = useSearchParams();
-  const [destination, setDestination] = useState(params.get("destination") || "");
-  const [category, setCategory] = useState(params.get("category") || "");
+  const location = useLocation();
+  const [destination, setDestination] = useState("");
+  const [category, setCategory] = useState("");
   const [experiences, setExperiences] = useState([]);
   const [selected, setSelected] = useState(null);
   const [booking, setBooking] = useState({ date: "", guests: 1, couponCode: "" });
@@ -29,6 +29,12 @@ export default function Experiences() {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, destination]);
+
+  useEffect(() => {
+    const nextParams = new URLSearchParams(location.search);
+    setDestination(nextParams.get("destination") || "");
+    setCategory(nextParams.get("category") || "");
+  }, [location.search]);
 
   async function bookExperience() {
     if (!user) return navigate("/login");

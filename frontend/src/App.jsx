@@ -12,6 +12,7 @@ import VendorDashboard from "./pages/VendorDashboard";
 import TravelServices from "./pages/TravelServices";
 import Profile from "./pages/Profile";
 import LocationTracker from "./pages/LocationTracker";
+import SearchResults from "./pages/SearchResults";
 import { CurrencyProvider } from "./context/CurrencyContext";
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
       <Route path="/vendor/onboarding" element={<Layout><VendorDashboard /></Layout>} />
       <Route path="/profile" element={<Layout><Profile /></Layout>} />
       <Route path="/tracker" element={<Layout><LocationTracker /></Layout>} />
+      <Route path="/search" element={<Layout><SearchResults /></Layout>} />
       </Routes>
     </CurrencyProvider>
   );

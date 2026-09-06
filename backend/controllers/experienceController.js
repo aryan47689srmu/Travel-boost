@@ -7,10 +7,16 @@ const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) =>
 // GET /api/experiences?lat=..&lng=..&radius=25   -> nearest experiences first, within radius (km, default 25)
 exports.listExperiences = async (req, res) => {
   try {
-    const { destination, category, lat, lng, radius } = req.query;
+    const { destination, category, q, lat, lng, radius } = req.query;
     const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
     if (category) filter.category = category;
+    if (q) filter.$or = [
+      { title: new RegExp(q, "i") },
+      { destination: new RegExp(q, "i") },
+      { category: new RegExp(q, "i") },
+      { description: new RegExp(q, "i") },
+    ];
 
     const hasCoords = lat !== undefined && lng !== undefined;
     if (hasCoords) Object.assign(filter, nearFilter(lat, lng, radius ? Number(radius) : 25));

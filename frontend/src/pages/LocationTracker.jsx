@@ -1,7 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../api/client";
 import { useCurrency } from "../context/CurrencyContext";
+import { Circle, CircleMarker, MapContainer, TileLayer, useMap } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 
 // Categories backed by real TravelBoost data (queried by lat/lng against our own API).
 const dataCategories = [
@@ -63,6 +65,16 @@ const kindConfig = {
   services: { endpoint: "/travel-services", detailPath: "/travel-services" },
 };
 
+function RecenterMap({ location }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView([location.latitude, location.longitude], Math.max(map.getZoom(), 14));
+  }, [location, map]);
+
+  return null;
+}
+
 export default function LocationTracker() {
   const [location, setLocation] = useState(null);
   const [message, setMessage] = useState(
@@ -76,9 +88,22 @@ export default function LocationTracker() {
   const [resultsLoading, setResultsLoading] = useState(false);
   const [resultsError, setResultsError] = useState(null);
   const [showingAllListings, setShowingAllListings] = useState(false);
+  const watchId = useRef(null);
 
   const navigate = useNavigate();
   const { formatCurrency } = useCurrency();
+
+  useEffect(() => () => {
+    if (watchId.current !== null) navigator.geolocation?.clearWatch(watchId.current);
+  }, []);
+
+  function updateLocation({ coords }) {
+    setLocation({
+      latitude: coords.latitude,
+      longitude: coords.longitude,
+      accuracy: coords.accuracy,
+    });
+  }
 
   function track() {
     if (!navigator.geolocation) {
@@ -89,15 +114,8 @@ export default function LocationTracker() {
     setLoading(true);
     setMessage("Finding your current location…");
 
-    navigator.geolocation.getCurrentPosition(
-      ({ coords }) => {
-        const nextLocation = {
-          latitude: coords.latitude,
-          longitude: coords.longitude,
-          accuracy: coords.accuracy,
-        };
-
-        setLocation(nextLocation);
+    const onLocationSuccess = (position) => {
+        updateLocation(position);
         setActiveCategory(null);
         setResults([]);
         setResultsError(null);
@@ -107,7 +125,10 @@ export default function LocationTracker() {
         setMessage(
           "Location found! Choose a category below to explore nearby places."
         );
-      },
+    };
+
+    navigator.geolocation.getCurrentPosition(
+      onLocationSuccess,
       (error) => {
         setLoading(false);
 
@@ -131,6 +152,12 @@ export default function LocationTracker() {
         maximumAge: 30000,
       }
     );
+
+    watchId.current = navigator.geolocation.watchPosition(updateLocation, () => {}, {
+      enableHighAccuracy: true,
+      maximumAge: 5000,
+      timeout: 15000,
+    });
   }
 
   function mapsSearch(query = "") {
@@ -212,15 +239,34 @@ export default function LocationTracker() {
 
       {/* Location Card */}
       <section className="rounded-2xl border border-gray-100 bg-white p-6 shadow-sm">
-        <div className="flex h-52 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-300">
-          <div className="text-center">
-            <div className="text-6xl">📍</div>
-
-            <p className="mt-3 text-sm font-medium text-gray-700">
-              {location ? "Your current location" : "Location not detected"}
-            </p>
+        {location ? (
+          <MapContainer
+            center={[location.latitude, location.longitude]}
+            zoom={14}
+            scrollWheelZoom
+            className="h-64 w-full rounded-2xl"
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <RecenterMap location={location} />
+            <CircleMarker
+              center={[location.latitude, location.longitude]}
+              radius={9}
+              pathOptions={{ color: "#4a18c9", fillColor: "#6d3bff", fillOpacity: 1 }}
+            />
+            <Circle
+              center={[location.latitude, location.longitude]}
+              radius={location.accuracy}
+              pathOptions={{ color: "#6d3bff", fillColor: "#b3a1ff", fillOpacity: 0.2 }}
+            />
+          </MapContainer>
+        ) : (
+          <div className="flex h-64 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-brand-300">
+            <div className="text-center"><div className="text-6xl">📍</div><p className="mt-3 text-sm font-medium text-gray-700">Location not detected</p></div>
           </div>
-        </div>
+        )}
 
         <p className="mt-4 text-sm text-gray-600">{message}</p>
 
@@ -431,16 +477,19 @@ export default function LocationTracker() {
                       </div>
 
                       <button
-                        onClick={() =>
-                          navigate(
-                            item._id && activeCategory.kind === "hotels"
-                              ? `/hotels/${item._id}`
-                              : kindConfig[activeCategory.kind].detailPath
-                          )
-                        }
+                        disabled={activeCategory.kind === "services"}
+                        onClick={() => {
+                          if (item._id && activeCategory.kind === "hotels") {
+                            navigate(`/hotels/${item._id}`);
+                            return;
+                          }
+                          if (activeCategory.kind !== "services") {
+                            navigate(kindConfig[activeCategory.kind].detailPath);
+                          }
+                        }}
                         className="mt-3 w-full rounded-lg bg-brand-50 py-1.5 text-xs font-semibold text-brand-700 hover:bg-brand-100"
                       >
-                        View & Book
+                        {activeCategory.kind === "services" ? "Available near you" : "View & Book"}
                       </button>
                     </div>
                   ))}

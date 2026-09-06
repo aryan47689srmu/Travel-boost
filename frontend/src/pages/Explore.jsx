@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import api from "../api/client";
 import HotelCard from "../components/HotelCard";
 
 export default function Explore() {
-  const [params] = useSearchParams();
-  const [destination, setDestination] = useState(params.get("destination") || "");
+  const location = useLocation();
+  const [destination, setDestination] = useState("");
   const [sort, setSort] = useState("rating");
   const [hotels, setHotels] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  async function search() {
+  async function search(nextDestination = destination) {
     setLoading(true);
     try {
-      const { data } = await api.get("/hotels", { params: { destination, sort } });
+      const { data } = await api.get("/hotels", { params: { destination: nextDestination, sort } });
       setHotels(data);
     } finally {
       setLoading(false);
@@ -21,9 +21,11 @@ export default function Explore() {
   }
 
   useEffect(() => {
-    search();
+    const nextDestination = new URLSearchParams(location.search).get("destination") || "";
+    setDestination(nextDestination);
+    search(nextDestination);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [location.search]);
 
   return (
     <div className="space-y-6">

@@ -2,6 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useCurrency } from "../context/CurrencyContext";
+import api from "../api/client";
 
 export default function Topbar() {
   const { user, logout } = useAuth();
@@ -9,6 +10,7 @@ export default function Topbar() {
   const navigate = useNavigate();
   const [menu, setMenu] = useState(null);
   const [query, setQuery] = useState("");
+  const [bookings, setBookings] = useState([]);
   const actionsRef = useRef(null);
 
   useEffect(() => {
@@ -21,6 +23,45 @@ export default function Topbar() {
     document.addEventListener("pointerdown", closeMenu);
     return () => document.removeEventListener("pointerdown", closeMenu);
   }, []);
+
+  useEffect(() => {
+    if (!user) {
+      setBookings([]);
+      return undefined;
+    }
+
+    let active = true;
+    const loadBookings = () => {
+      api.get("/bookings/mine")
+        .then(({ data }) => {
+          if (active) setBookings(Array.isArray(data) ? data : []);
+        })
+        .catch(() => {});
+    };
+
+    loadBookings();
+    const timer = window.setInterval(loadBookings, 30000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [user]);
+
+  function bookingTitle(booking) {
+    return booking.item?.name || booking.item?.title || "Your booking";
+  }
+
+  function bookingDates(booking) {
+    const start = new Date(booking.checkIn).toLocaleDateString();
+    const end = booking.checkOut ? ` - ${new Date(booking.checkOut).toLocaleDateString()}` : "";
+    return `${start}${end}`;
+  }
+
+  function isUpcoming(booking) {
+    const start = new Date(booking.checkIn).getTime();
+    const daysUntil = (start - Date.now()) / 86400000;
+    return booking.status === "confirmed" && daysUntil >= 0 && daysUntil <= 7;
+  }
 
   function selectCurrency(value) {
     chooseCurrency(value);
@@ -35,7 +76,7 @@ export default function Topbar() {
 
   return (
     <header className="flex items-center gap-4 border-b border-gray-100 bg-white px-6 py-4">
-      <form onSubmit={(event) => { event.preventDefault(); navigate(`/explore?destination=${encodeURIComponent(query)}`); }} className="relative max-w-md flex-1">
+      <form onSubmit={(event) => { event.preventDefault(); if (query.trim()) navigate(`/search?q=${encodeURIComponent(query.trim())}`); }} className="relative max-w-md flex-1">
         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
         <input value={query} onChange={(event) => setQuery(event.target.value)} type="text" placeholder="Where do you want to go?" className="w-full rounded-lg border border-gray-200 py-2.5 pl-9 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-brand-300" />
       </form>
@@ -51,8 +92,8 @@ export default function Topbar() {
         </div>
 
         <div className="relative">
-          <button onClick={() => setMenu(menu === "notifications" ? null : "notifications")} aria-label="Notifications" className="rounded-lg p-2 text-lg hover:bg-gray-50">🔔</button>
-          {menu === "notifications" && <div className="absolute right-0 z-30 mt-2 w-72 rounded-xl border border-gray-100 bg-white p-3 shadow-lg"><p className="mb-2 font-semibold text-gray-800">Notifications</p>{user ? <><div className="rounded-lg bg-brand-50 p-3 text-xs text-brand-800">Welcome, {user.name}. Your bookings and local-tourism offers are ready to manage.</div><Link onClick={() => setMenu(null)} to="/bookings" className="mt-2 block text-xs font-medium text-brand-600">View my bookings →</Link></> : <p className="text-xs text-gray-500">Sign in to receive booking updates and travel reminders.</p>}</div>}
+          <button onClick={() => setMenu(menu === "notifications" ? null : "notifications")} aria-label="Notifications" className="relative rounded-lg p-2 text-lg hover:bg-gray-50">🔔{bookings.length > 0 && <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">{bookings.length}</span>}</button>
+          {menu === "notifications" && <div className="absolute right-0 z-30 mt-2 w-80 rounded-xl border border-gray-100 bg-white p-3 shadow-lg"><p className="mb-2 font-semibold text-gray-800">Notifications</p>{user ? <>{bookings.length > 0 ? <div className="max-h-64 space-y-2 overflow-y-auto">{bookings.slice(0, 5).map((booking) => <div key={booking._id} className={`rounded-lg p-3 text-xs ${isUpcoming(booking) ? "bg-amber-50 text-amber-900" : "bg-brand-50 text-brand-800"}`}><p className="font-semibold">{isUpcoming(booking) ? "Upcoming booking" : "Booking confirmed"}</p><p className="mt-1">{bookingTitle(booking)}</p><p className="mt-1">Date: {bookingDates(booking)}</p></div>)}</div> : <div className="rounded-lg bg-brand-50 p-3 text-xs text-brand-800">No bookings yet. Your booking updates will appear here.</div>}<Link onClick={() => setMenu(null)} to="/bookings" className="mt-2 block text-xs font-medium text-brand-600">View my bookings →</Link></> : <p className="text-xs text-gray-500">Sign in to receive booking updates and travel reminders.</p>}</div>}
         </div>
 
         {user ? <div className="relative">

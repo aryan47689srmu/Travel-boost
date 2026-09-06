@@ -8,9 +8,15 @@ const pickEditable = (body) => Object.fromEntries(editableFields.filter((key) =>
 // GET /api/travel-services?lat=..&lng=..&radius=25          -> nearest services first, within radius (km, default 25)
 exports.listServices = async (req, res) => {
   try {
-    const { destination, type, lat, lng, radius } = req.query;
+    const { destination, type, q, lat, lng, radius } = req.query;
     const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
+    if (q) filter.$or = [
+      { title: new RegExp(q, "i") },
+      { destination: new RegExp(q, "i") },
+      { type: new RegExp(q, "i") },
+      { description: new RegExp(q, "i") },
+    ];
     if (type) {
       const types = type.split(",").map((t) => t.trim()).filter(Boolean);
       filter.type = types.length > 1 ? { $in: types } : types[0];

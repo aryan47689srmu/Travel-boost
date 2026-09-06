@@ -14,7 +14,7 @@ const validLocation = (location) => {
 // GET /api/hotels?lat=..&lng=..&radius=25   -> nearest hotels first, within radius (km, default 25)
 exports.listHotels = async (req, res) => {
   try {
-    const { destination, minPrice, maxPrice, search, sort, lat, lng, radius } = req.query;
+    const { destination, minPrice, maxPrice, search, q, sort, lat, lng, radius } = req.query;
     const filter = {};
     if (destination) filter.destination = new RegExp(destination, "i");
     if (minPrice || maxPrice) {
@@ -26,8 +26,8 @@ exports.listHotels = async (req, res) => {
     const hasCoords = lat !== undefined && lng !== undefined;
     if (hasCoords) {
       Object.assign(filter, nearFilter(lat, lng, radius ? Number(radius) : 25));
-    } else if (search) {
-      filter.$text = { $search: search };
+    } else if (q || search) {
+      filter.$text = { $search: q || search };
     }
 
     let query = Hotel.find(filter);
