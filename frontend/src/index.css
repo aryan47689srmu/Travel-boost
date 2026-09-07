@@ -13,6 +13,17 @@ input,
 select,
 textarea {
   max-width: 100%;
+  background-color: #ffffff;
+  color: #111827;
+}
+input::placeholder
+textarea::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+select option{
+  background-color: #ffffff;
+  color: #111827;
 }
 
 @media (max-width: 639px) {
