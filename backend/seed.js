@@ -71,20 +71,6 @@ async function seed() {
       verificationStatus: "verified",
     },
     {
-      name: "Tea Garden Retreat",
-      destination: "Darjeeling",
-      state: "West Bengal",
-      pricePerNight: 3200,
-      rating: 4.5,
-      reviewCount: 987,
-      images: ["https://images.unsplash.com/photo-1500534623283-312aebe7e1c9?auto=format&fit=crop&w=900&q=80"],
-      amenities: ["Tea Estate Tour", "Mountain View"],
-      tags: ["nature", "cultural"],
-      vendor: vendor._id,
-      location: point(88.2663, 27.041),  // Darjeeling Mall Road
-      verificationStatus: "verified",
-    },
-    {
       name: "Coral Bay Villas",
       destination: "Andaman",
       state: "Andaman & Nicobar",
@@ -98,21 +84,7 @@ async function seed() {
       location: point(92.7265, 11.6234),  // Port Blair, Andaman
       verificationStatus: "verified",
     },
-    {
-      name: "Nawabi Heritage Stay",
-      destination: "Lucknow",
-      state: "Uttar Pradesh",
-      description: "A comfortable heritage-inspired stay close to Lucknow's food lanes and historic monuments.",
-      pricePerNight: 2900,
-      rating: 4.7,
-      reviewCount: 342,
-      images: ["https://images.unsplash.com/photo-1582972236019-ea9e5e7e98f4?auto=format&fit=crop&w=900&q=80"],
-      amenities: ["WiFi", "Breakfast", "Airport Transfer"],
-      tags: ["cultural", "food", "heritage"],
-      vendor: vendor._id,
-      location: point(80.9462, 26.8467),  // Hazratganj, Lucknow
-      verificationStatus: "verified",
-    },
+    
   ]);
 
   await Experience.insertMany([
