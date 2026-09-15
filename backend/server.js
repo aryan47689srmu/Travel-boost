@@ -1,9 +1,11 @@
 require("dotenv").config();
 
+
 const express = require("express");
 const cors = require("cors");
-
 const connectDB = require("./config/db");
+const { connectRedis } = require("./config/redis");
+
 
 // Routes
 const authRoutes = require("./routes/auth");
@@ -141,6 +143,9 @@ async function startServer() {
   try {
     // Connect to MongoDB first
     await connectDB();
+
+    //Connect to Redis
+    await connectRedis();
 
     // Start Express server
     app.listen(PORT, "0.0.0.0", () => {
